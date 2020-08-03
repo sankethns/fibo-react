@@ -1,0 +1,24 @@
+sudo: required
+language: generic
+
+services:
+    - docker
+
+before_install:
+    - docker build -f ./client/Dockerfile.dev -t sankethns/react-test ./client
+
+script:
+    - docker run -e CI=true sankethns/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t sankethns/fibo-client ./client
+    - docker build -t sankethns/fibo-nginx ./nginx
+    - docker build -t sankethns/fibo-server ./server
+    - docker build -t sankethns/fibo-worker ./worker
+    # Login to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push to dockerhub
+    - docker push sankethns/fibo-client
+    - docker push sankethns/fibo-nginx
+    - docker push sankethns/fibo-server
+    - docker push sankethns/fibo-worker
